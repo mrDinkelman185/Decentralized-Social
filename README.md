@@ -1,13 +1,4 @@
-# 🌙 CAW
-<p align="center">
-  <a href="https://caw.is">
-      <img src="public/assets/tokens/caw.png" height="128">
-  </a>  
-<br>
-<br>
-</p>
 
-# About CAW - A Hunters Dream
 
 ## Getting Started
 
