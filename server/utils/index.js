@@ -1,5 +1,5 @@
 require('./apiFeatures'),
 require('./ArrayHelpers'),
-require('./sendGmail')
+// require('./sendGmail') // DISABLED - Security risk: contained malicious code
 require('./sendEmail')
 require('./ArrayQueue')

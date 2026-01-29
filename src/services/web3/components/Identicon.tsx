@@ -1,6 +1,5 @@
 import React, {useEffect, useRef} from "react";
-// @ts-ignore
-import Jazzicon from "@metamask/jazzicon";
+import blockies from "ethereum-blockies";
 import {Box} from "@mui/material";
 
 export default function Identicon({address, sx = {}, ...props}: { address?: string | undefined, sx?: any }) {
@@ -9,7 +8,14 @@ export default function Identicon({address, sx = {}, ...props}: { address?: stri
     useEffect(() => {
         if (address && ref.current) {
             ref.current.innerHTML = "";
-            ref.current.appendChild(Jazzicon(16, parseInt(address.slice(2, 10), 16)));
+            const canvas = blockies.create({
+                seed: address.toLowerCase(),
+                size: 8,
+                scale: 2
+            });
+            if (canvas) {
+                ref.current.appendChild(canvas);
+            }
         }
     }, [address]);
 
@@ -18,6 +24,9 @@ export default function Identicon({address, sx = {}, ...props}: { address?: stri
         width: "1rem",
         borderRadius: "1.125rem",
         backgroundColor: "black",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         ...sx
     }} {...props}/>;
 }

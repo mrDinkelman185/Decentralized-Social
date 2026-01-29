@@ -1,21 +1,54 @@
-const express = require('express'),
-    path = require('path'),
-    session = require('express-session'),
-    bodyParse = require('body-parser'),
-    passport = require('./auth/passport'),
-    mongoose = require('mongoose'),
-    middleware = require('connect-ensure-login'),
-    MongoStore = require('connect-mongo');
-    config = require('./config/default'),
-    flash = require('connect-flash'),
-    port = config.server.port,
-    app = express(),
-    node_media_server = require('./media_server'),
-    thumbnail_generator = require('./cron/thumbnails');
+const express = require('express');
+const path = require('node:path');
+const session = require('express-session');
+const bodyParse = require('body-parser');
+const passport = require('./auth/passport');
+const mongoose = require('mongoose');
+const middleware = require('connect-ensure-login');
+const MongoStore = require('connect-mongo');
+const config = require('./config/default');
+const flash = require('connect-flash');
+const { csrfSync } = require('csrf-sync'); // CWE-352: CSRF protection
+const port = process.env.PORT || config.server.port;
+const app = express();
+const node_media_server = require('./media_server');
+const thumbnail_generator = require('./cron/thumbnails');
 
-//mongoose.connect('mongodb://127.0.0.1/nodeStream' , { useNewUrlParser: true });
+// Load environment variables
+require('dotenv').config();
 
 const utils = require('./utils');
+
+// Security: Disable X-Powered-By header
+app.disable('x-powered-by');
+
+// Security: Add Helmet for security headers
+const helmet = require('helmet');
+app.use(helmet({
+    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+    crossOriginEmbedderPolicy: false
+}));
+
+// Security: Add rate limiting
+const rateLimit = require('express-rate-limit');
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply rate limiting to all requests
+app.use(limiter);
+
+// Stricter rate limiting for auth endpoints
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 requests per windowMs
+    message: 'Too many authentication attempts, please try again later.',
+    skipSuccessfulRequests: true,
+});
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, './views'));
@@ -29,21 +62,35 @@ app.use(bodyParse.json({extended: true}));
 
 app.use(session({
     store: MongoStore.create({
-        mongoUrl: 'mongodb://127.0.0.1/nodeStream',
+        mongoUrl: process.env.MONGODB_URI || 'mongodb://127.0.0.1/nodeStream',
         ttl: 14 * 24 * 60 * 60 // = 14 days. Default
     }),
     secret: config.server.secret,
-    maxAge : Date().now + (60 * 1000 * 30),
+    maxAge : Date.now() + (60 * 1000 * 30), // Fixed: Date.now() instead of Date().now
     resave : true,
     saveUninitialized : false,
+    // CWE-352: SameSite + secure cookie to mitigate CSRF
+    cookie: {
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+    },
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Register app routes
-app.use('/login', require('./routes/login'));
-app.use('/register', require('./routes/register'));
+// CWE-352: CSRF protection via csrf-sync (Synchronizer Token Pattern)
+const { csrfSynchronisedProtection } = csrfSync({
+    getTokenFromRequest: (req) =>
+        req.headers['x-csrf-token'] || (req.body && req.body._csrf),
+});
+
+app.use(csrfSynchronisedProtection);
+
+// Register app routes (rate limit on auth to prevent brute-force)
+app.use('/login', authLimiter, require('./routes/login'));
+app.use('/register', authLimiter, require('./routes/register'));
 app.use('/settings', require('./routes/settings'));
 app.use('/streams', require('./routes/streams'));
 app.use('/user', require('./routes/user'));
@@ -54,7 +101,7 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('*', middleware.ensureLoggedIn(), (req, res) => {
-    res.render('index');
+    res.render('index', { csrfToken: req.csrfToken() });
 });
 
 app.listen(port, () => console.log(`App listening on ${port}!`));

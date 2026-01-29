@@ -8,7 +8,7 @@ import {Avatar, Chip, CircularProgress, Grid, Menu, MenuItem} from "@mui/materia
 import axios from "axios";
 import {CAW_ADDRESS, DATA_URI_ABI, GENERATOR, USERNAME_ABI, USERNAME_ADDRESS} from "../../../services/web3";
 import {useAccount, useContractReads} from 'wagmi';
-import {createAlchemyWeb3} from "@alch/alchemy-web3";
+import {ethers} from "ethers";
 import env from "../../../config/env";
 import {load, save} from "../../../utils/storage";
 
@@ -55,7 +55,42 @@ const CHIP = {
 
 
 const {SEPOLIA_ALCHEMY, OPENSEA} = env;
-const web3 = createAlchemyWeb3(SEPOLIA_ALCHEMY);
+const provider = new ethers.JsonRpcProvider(SEPOLIA_ALCHEMY);
+
+// Security: Validate URL to prevent open redirect
+const isValidURL = (url: string): boolean => {
+    try {
+        const parsed = new URL(url);
+        // Only allow https/http protocols
+        if (!['https:', 'http:'].includes(parsed.protocol)) {
+            return false;
+        }
+        // Whitelist allowed domains
+        const allowedDomains = [
+            'opensea.io',
+            'etherscan.io',
+            'sepolia.etherscan.io',
+            'nft.cawmnty.com'
+        ];
+        return allowedDomains.some(domain => parsed.hostname.endsWith(domain));
+    } catch {
+        return false;
+    }
+};
+
+// Sanitize tokenId to prevent open redirect via path traversal (only allow digits)
+const sanitizeTokenId = (id: unknown): string => {
+    const s = typeof id === 'number' ? String(id) : typeof id === 'string' ? id : '';
+    return /^\d+$/.test(s) ? s : '0';
+};
+
+const safeOpenURL = (url: string): void => {
+    if (isValidURL(url)) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+        console.error('Invalid URL:', url);
+    }
+};
 
 export const WalletBalances = ({handleClose, open}: { handleClose: any, open: any }) => {
 
@@ -92,13 +127,23 @@ export const WalletBalances = ({handleClose, open}: { handleClose: any, open: an
         const runApp = async () => {
 
 
+            // ⚠️ SECURITY: Hardcoded JWT token removed - use environment variable instead
+            // Original token was: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+            // This token is COMPROMISED and must be rotated in Moralis dashboard
+            const MORALIS_API_KEY = env.MORALIS_API_KEY; // Get from environment variables
+            
+            if (!MORALIS_API_KEY) {
+                console.error('MORALIS_API_KEY not configured');
+                return;
+            }
+            
             const url = "https://deep-index.moralis.io/api/v2/" + account + "/nft?chain=" + "0xaa36a7" + "&format=decimal&media_items=true"
             const response = await axios.get(
                 url,
                 {
                     headers: {
                         "Accept": 'application/json',
-                        'X-API-Key': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImFlMzdiMTBmLTkzNDQtNDJkYi04YzEzLWRmOTg2MTUwODY1YSIsIm9yZ0lkIjoiMzQyMzY0IiwidXNlcklkIjoiMzUxOTU1IiwidHlwZUlkIjoiMGI3OGVlNzAtYjYxZC00MzA3LTlkMGYtMjBkNWYyYWJhZmFlIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE2ODg5ODE4NTUsImV4cCI6NDg0NDc0MTg1NX0.DkgaujHVjFNtMVAdpoWXRvo9rRfyFpHpQ9yiOPNHCiw",
+                        'X-API-Key': MORALIS_API_KEY, // Use from environment
                     }
                 }
             )
@@ -112,8 +157,8 @@ export const WalletBalances = ({handleClose, open}: { handleClose: any, open: an
                 const nft = allNfts?.[i];
                 if (nft?.token_address?.toLowerCase() === USERNAME_ADDRESS?.toLowerCase()) {
                     console.log(nft)
-                    const contract = new web3.eth.Contract((USERNAME_ABI as unknown as any), USERNAME_ADDRESS);
-                    const data = await contract.methods.getProfileImageURI(allNfts?.[i]?.token_id).call()
+                    const contract = new ethers.Contract(USERNAME_ADDRESS, USERNAME_ABI as any, provider);
+                    const data = await contract.getProfileImageURI(allNfts?.[i]?.token_id);
                     const response = await axios.get(data)
                     cawNfts.push({...response?.data, tokenId: allNfts?.[i]?.token_id, tx:allNfts?.[i]?.transaction_hash})
                 }
@@ -184,9 +229,9 @@ export const WalletBalances = ({handleClose, open}: { handleClose: any, open: an
                                                     'aria-labelledby': 'basic-button',
                                                 }}
                                             >
-                                                <MenuItem onClick={() => window.open("https://nft.cawmnty.com" + "/" + "asset" + "/" + nft.tokenId,"_blank")}>View CAW Market</MenuItem>
-                                                <MenuItem onClick={() => window.open(OPENSEA + "/" + USERNAME_ADDRESS + "/" + nft.tokenId,"_blank")}>View Opensea</MenuItem>
-                                                <MenuItem onClick={() => window.open("https://sepolia.etherscan.io/nft" + "/" + USERNAME_ADDRESS + "/" + nft.tokenId,"_blank")}>View Etherscan</MenuItem>
+                                                <MenuItem onClick={() => safeOpenURL("https://nft.cawmnty.com/asset/" + sanitizeTokenId(nft.tokenId))}>View CAW Market</MenuItem>
+                                                <MenuItem onClick={() => safeOpenURL(OPENSEA + "/" + USERNAME_ADDRESS + "/" + sanitizeTokenId(nft.tokenId))}>View Opensea</MenuItem>
+                                                <MenuItem onClick={() => safeOpenURL("https://sepolia.etherscan.io/nft/" + USERNAME_ADDRESS + "/" + sanitizeTokenId(nft.tokenId))}>View Etherscan</MenuItem>
                                                 <MenuItem onClick={() => genareteHashed(nft)}>Change Account</MenuItem>
                                             </Menu>
                                         </Box>

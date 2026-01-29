@@ -1,5 +1,5 @@
 
-const NETWORK_ID = process.env.NEXT_PUBLIC_NETWORK_ID
+const NETWORK_ID = process.env.NETWORK_ID
 
 export const loadContract = async (name, web3) => {
   const res = await fetch(`/contracts/${name}.json`)

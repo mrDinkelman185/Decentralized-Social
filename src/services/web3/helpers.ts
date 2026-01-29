@@ -5,14 +5,13 @@ import {
     CHAINS,
     CHAINS_EXTENDED,
     DEFAULT_CHAIN,
-    DEFAULT_CHAIN_EXTENDED,
-    IS_MORALIS_AVAILABLE
+    DEFAULT_CHAIN_EXTENDED
 } from "./base";
 import {Chain, Connector} from "wagmi";
 import {BigNumber} from "ethers";
 import {formatUnits} from "ethers/lib/utils";
 import {create as apisauceCreate} from "apisauce";
-import {ExtendedChain, HumanReadableAmountInput, MoralisChainId, MoralisWeb3Api} from "./types";
+import {ExtendedChain, HumanReadableAmountInput} from "./types";
 import {connectorInformations} from "./connection";
 import env from "../../config/env";
 
@@ -111,18 +110,8 @@ export function humanReadableAmount(amount: HumanReadableAmountInput, requestedD
     return shortenedAmount;
 }
 
-export async function fetchNFTsForContract(moralisWeb3Api: MoralisWeb3Api, chain: MoralisChainId, walletAddress: string, tokenAddress: string) {
-    if (!IS_MORALIS_AVAILABLE) return null;
-
-    const options = {
-        chain: chain,
-        address: walletAddress,
-        token_address: tokenAddress
-    };
-    const nfts = await moralisWeb3Api.account.getNFTsForContract(options);
-
-    return nfts;
-}
+// Removed fetchNFTsForContract - Moralis SDK removed for security
+// Use MoralisService.tokenPrice() for REST API calls instead
 
 export function getConnectorInformationByConnector(connector: Connector) {
     const connectorId = connector.id;

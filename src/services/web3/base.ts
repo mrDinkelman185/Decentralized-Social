@@ -9,7 +9,7 @@ import env from "../../config/env";
 import {_} from "../../utils/primary-utils";
 import {ExtendedChain} from "./types";
 
-const {ALCHEMY_KEY: alchemyKey_env, MORALIS_APP_ID, MORALIS_SERVER_URL} = env;
+const {ALCHEMY_KEY: alchemyKey_env} = env;
 
 const defaultAlchemyId = '_gg7wSSi0KMBsdKnGVfHDueq6xMB9EkC';
 const ALCHEMY_KEY = alchemyKey_env ?? defaultAlchemyId;
@@ -233,7 +233,6 @@ export const ALL_CHAINS_EXTENDED: ExtendedChain[] = [
             etherscan: etherscanBlockExplorers.mainnet,
             default: etherscanBlockExplorers.mainnet
         },
-        moralisLookup: ["eth", "0x1"],
         addresses: {
             WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
         }
@@ -276,8 +275,7 @@ export const ALL_CHAINS_EXTENDED: ExtendedChain[] = [
         addresses: {
             WETH: ""
         },
-        testnet: true,
-        moralisLookup: ["rinkeby", "0x4"]
+        testnet: true
     },
     {
         id: allChainIds.sepoliaTestnet,
@@ -395,8 +393,7 @@ export const ALL_CHAINS_EXTENDED: ExtendedChain[] = [
         blockExplorers: {
             etherscan: etherscanBlockExplorers.polygon,
             default: etherscanBlockExplorers.polygon
-        },
-        moralisLookup: ["polygon", "0x89"]
+        }
     },
     {
         id: allChainIds.polygonMumbai,
@@ -416,8 +413,7 @@ export const ALL_CHAINS_EXTENDED: ExtendedChain[] = [
         addresses: {
             WETH: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
         },
-        testnet: true,
-        moralisLookup: ["mumbai", "0x13881"]
+        testnet: true
     },
     {
         id: allChainIds.arbitrum,
@@ -484,7 +480,6 @@ export const ALL_CHAINS_EXTENDED: ExtendedChain[] = [
             etherscan: etherscanBlockExplorers.bsc,
             default: etherscanBlockExplorers.bsc
         },
-        moralisLookup: ["bsc", "0x38"],
     },
     {
         id: allChainIds.bscTesnet,
@@ -506,8 +501,7 @@ export const ALL_CHAINS_EXTENDED: ExtendedChain[] = [
         blockExplorers: {
             etherscan: etherscanBlockExplorers.bscTestnet,
             default: etherscanBlockExplorers.bscTestnet
-        },
-        moralisLookup: ["bsc testnet", "0x61"]
+        }
     },
     {
         id: allChainIds.fantom,
@@ -524,8 +518,7 @@ export const ALL_CHAINS_EXTENDED: ExtendedChain[] = [
         },
         addresses: {
             WETH: "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83"
-        },
-        moralisLookup: ["fantom", "0xfa"]
+        }
     },
     {
         id: allChainIds.fantomTestnet,
@@ -559,8 +552,7 @@ export const ALL_CHAINS_EXTENDED: ExtendedChain[] = [
         blockExplorers: {
             etherscan: etherscanBlockExplorers.avalanche,
             default: etherscanBlockExplorers.avalanche
-        },
-        moralisLookup: ["avalanche", "0xa86a"]
+        }
     },
     {
         id: allChainIds.avalancheFuji,
@@ -578,7 +570,7 @@ export const ALL_CHAINS_EXTENDED: ExtendedChain[] = [
             etherscan: etherscanBlockExplorers.avalancheFuji,
             default: etherscanBlockExplorers.avalancheFuji
         },
-        moralisLookup: ["avalanche testnet", "0xa869"]
+        testnet: true
     },
     {
         id: allChainIds.cronos,
@@ -651,4 +643,5 @@ export const DEFAULT_CHAIN_ID = CHAINS.find(chain => chain.id === env.DEFAULT_CH
 export const DEFAULT_CHAIN_EXTENDED = CHAINS_EXTENDED.find((chain) => chain.id === DEFAULT_CHAIN_ID) as ExtendedChain;
 export const DEFAULT_CHAIN = convertExtendedChainToBaseChain(DEFAULT_CHAIN_EXTENDED);
 
-export const IS_MORALIS_AVAILABLE = !!MORALIS_APP_ID && !!MORALIS_SERVER_URL;
+// Removed IS_MORALIS_AVAILABLE - Moralis SDK removed for security
+// Use MoralisService.tokenPrice() for REST API calls instead

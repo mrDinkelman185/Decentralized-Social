@@ -132,7 +132,7 @@ class DebugHash extends Hash {
 	}
 }
 
-/** @type {typeof import("crypto") | undefined} */
+/** @type {typeof import("node:crypto") | undefined} */
 let crypto;
 /** @type {typeof import("./hash/xxhash64") | undefined} */
 let createXXHash64;
@@ -168,20 +168,12 @@ module.exports = algorithm => {
 				BatchedHash
 			)(createXXHash64());
 		case "md4":
-			if (createMd4 === undefined) {
-				createMd4 = require("./hash/md4");
-				if (BatchedHash === undefined) {
-					BatchedHash = require("./hash/BatchedHash");
-				}
-			}
-			return new /** @type {typeof import("./hash/BatchedHash")} */ (
-				BatchedHash
-			)(createMd4());
 		case "native-md4":
-			if (crypto === undefined) crypto = require("crypto");
+			// SECURITY: MD4 is insecure, use SHA256 instead
+			if (crypto === undefined) crypto = require("node:crypto");
 			return new BulkUpdateDecorator(
-				() => /** @type {typeof import("crypto")} */ (crypto).createHash("md4"),
-				"md4"
+				() => /** @type {typeof import("crypto")} */ (crypto).createHash("sha256"),
+				"sha256"
 			);
 		default:
 			if (crypto === undefined) crypto = require("crypto");

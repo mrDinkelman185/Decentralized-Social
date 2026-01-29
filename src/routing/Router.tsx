@@ -17,8 +17,6 @@ import {CawDirectScreen} from "../screens/caw-direct/caw-direct-screen";
 import {ProfileScreen} from "../screens/profile/profile-screen";
 import 'animate.css';
 import {ACCOUNT, TAGS} from "../config/customData";
-import Moralis from "moralis";
-import {EvmChain} from "@moralisweb3/common-evm-utils";
 import axios from "axios";
 import {useAccount} from "wagmi";
 

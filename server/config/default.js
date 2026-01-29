@@ -1,23 +1,27 @@
+// Load environment variables
+require('dotenv').config();
+const crypto = require('node:crypto');
+
 const config = {
     server: {
-        secret: 'kjVkuti2xAyF3JGCzSZTk0YWM5JhI9mgQW4rytXc',
-        port : 3333
+        secret: process.env.SESSION_SECRET || crypto.randomBytes(64).toString('hex'),
+        port : process.env.PORT || 3333
     },
     rtmp_server: {
         rtmp: {
-            port: 1935,
+            port: process.env.RTMP_PORT || 1935,
             chunk_size: 60000,
             gop_cache: true,
             ping: 60,
             ping_timeout: 30
         },
         http: {
-            port: 8888,
+            port: process.env.RTMP_HTTP_PORT || 8888,
             mediaroot: './server/media',
-            allow_origin: '*'
+            allow_origin: process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? 'https://yourdomain.com' : '*')
         },
         trans: {
-            ffmpeg: '/usr/bin/ffmpeg',
+            ffmpeg: process.env.FFMPEG_PATH || '/usr/bin/ffmpeg',
             tasks: [
                 {
                     app: 'live',

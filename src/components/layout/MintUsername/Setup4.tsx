@@ -15,10 +15,10 @@ import {
     useContractRead,
     useContractWrite,
     usePrepareContractWrite,
-    useWaitForTransaction
+    useWaitForTransaction,
+    useSigner
 } from "wagmi";
-import {BigNumber} from "ethers";
-import {createAlchemyWeb3} from "@alch/alchemy-web3";
+import {BigNumber, ethers} from "ethers";
 import axios from "axios";
 import env from "../../../config/env";
 
@@ -82,11 +82,10 @@ interface State extends SnackbarOrigin {
     open: boolean;
 }
 
-const web3 = createAlchemyWeb3(SEPOLIA_ALCHEMY);
-
 export const Setup4 = ({loader, username, usdt, caw, eth, rawToken, transaction}: ISETUP4) => {
 
     const {address: account} = useAccount();
+    const {data: signer} = useSigner();
     const [ipfs, setIpfs] = useState("")
     const [manualLoader, setManualLoader] = useState(false)
     const [check, setCheck] = useState(false)
@@ -133,13 +132,21 @@ export const Setup4 = ({loader, username, usdt, caw, eth, rawToken, transaction}
 
 
     async function deneme(ipfsUri:string){
-        const contract = new web3.eth.Contract((USERNAME_ABI as unknown as any), USERNAME_ADDRESS);
-        await contract.methods.createNFT(username, ipfsUri, BigNumber.from(rawToken)).send({from:account}).then((e:any) => {
-            setMintTransaction(e.transactionHash)
-            setMintLoaders(false)
-        }).catch((error : any) => {
-            setMintLoaders(false)
-        })
+        if (!signer) {
+            console.error('Signer not available');
+            setMintLoaders(false);
+            return;
+        }
+        const contract = new ethers.Contract(USERNAME_ADDRESS, USERNAME_ABI as any, signer);
+        try {
+            const tx = await contract.createNFT(username, ipfsUri, BigNumber.from(rawToken));
+            setMintTransaction(tx.hash);
+            const receipt = await tx.wait();
+            setMintLoaders(false);
+        } catch (error: any) {
+            console.error('Mint error:', error);
+            setMintLoaders(false);
+        }
     }
 
 

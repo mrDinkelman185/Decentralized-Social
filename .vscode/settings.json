@@ -8,7 +8,7 @@
     "**/node_modules": true
   },
   "editor.tabSize": 2, // Sets tab size to 2 spaces
-  "editor.formatOnSave": false, // Automatically formats code on save{
+  "editor.formatOnSave": false, // Automatically formats code on save
   "terminal.integrated.profiles.windows": {
     "cmd": {
       "path": "C:\\Windows\\System32\\cmd.exe"
@@ -43,5 +43,9 @@
       "linux": "Default Shell",
       "osx": "Default Shell"
     }
-  }
+  },
+  "snyk.advanced.autoSelectOrganization": true,
+  "snyk.advanced.organization": "ad1c8bb0-1e12-4573-bb2a-5c322201d568",
+  "snyk.code.enabled": false,
+  "cSpell.words": ["Synchronised"]
 }

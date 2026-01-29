@@ -7,13 +7,13 @@ import {
     UNISWAP_ADDRESS, USDT_ADDRESS, USERNAME_ABI, USERNAME_ADDRESS, WETH_ADDRESS,
 } from "../../../services/web3";
 import {Tokens} from "./Tokens/Tokens";
-import {BigNumber} from "ethers";
-import {createAlchemyWeb3} from "@alch/alchemy-web3";
+import {BigNumber, ethers} from "ethers";
 import {useAccount, useBalance, useContractRead} from 'wagmi';
 import {Setup4} from "./Setup4";
 import env from "../../../config/env";
 
 const {MAINNET_ALCHEMY} = env;
+const provider = new ethers.JsonRpcProvider(MAINNET_ALCHEMY);
 
 const TITLE = {
     fontSize: "20px",
@@ -46,8 +46,6 @@ const GO_BTN = {
     fontSize: "15px",
     marginBottom: 10
 }
-
-const web3 = createAlchemyWeb3(MAINNET_ALCHEMY);
 
 export const Setup3 = ({
                            loader,
@@ -89,16 +87,16 @@ export const Setup3 = ({
 
 
     const wethAddress = async () => {
-        const contract = new web3.eth.Contract((UNISWAP_ABI as unknown as any), UNISWAP_ADDRESS);
-        const weths = await contract.methods.WETH().call()
+        const contract = new ethers.Contract(UNISWAP_ADDRESS, UNISWAP_ABI as any, provider);
+        const weths = await contract.WETH();
         return setWeth(weths)
     }
 
     const calculateEther = async () => {
         const eth = weth ?? WETH_ADDRESS;
         const usernamePrice = getCost("eth") ? BigNumber.from(getCost("eth")) : 0;
-        const contract = new web3.eth.Contract((UNISWAP_ABI as unknown as any), UNISWAP_ADDRESS);
-        const price = await contract.methods.getAmountsOut(usernamePrice, [MAIN_CAW_ADDRESS, eth]).call()
+        const contract = new ethers.Contract(UNISWAP_ADDRESS, UNISWAP_ABI as any, provider);
+        const price = await contract.getAmountsOut(usernamePrice, [MAIN_CAW_ADDRESS, eth]);
         setCalculateEth(price[1])
         return price
     }
@@ -123,8 +121,8 @@ export const Setup3 = ({
 
     const calculateUsdt = async () => {
         const eth = USDT_ADDRESS;
-        const contract = new web3.eth.Contract((UNISWAP_ABI as unknown as any), UNISWAP_ADDRESS);
-        const price = await contract.methods.getAmountsOut(calculateEth, [WETH_ADDRESS, eth]).call()
+        const contract = new ethers.Contract(UNISWAP_ADDRESS, UNISWAP_ABI as any, provider);
+        const price = await contract.getAmountsOut(calculateEth, [WETH_ADDRESS, eth]);
         setCalculateUsdt(price[1])
         return price
     }
